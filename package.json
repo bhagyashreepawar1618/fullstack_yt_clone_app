@@ -1,0 +1,16 @@
+{
+  "name": "yt_clone_megaproject",
+  "version": "1.0.0",
+  "description": "youtube clone project ",
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "license": "ISC",
+  "author": "Bhagyashree Pawar",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
