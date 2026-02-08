@@ -1,6 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+
+//user Schema
 const userSchema = new Schema(
   {
     username: {
@@ -48,20 +50,31 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: [true, "password is required"],
-      refreshToken: {
+    },
+
+    refreshToken: {
         type: String,
       },
     },
-  },
   { timestamps: true }
 );
 
+/*In all this methods we want data from data base thats why all this methods are written inside this user.model file so
+that we cant access the data using this context*/
+
+
+/*before saving password in datatbase we have to hash it
+we applied a hook pre befoew save and hash the password stored it in 
+password then save it in database */
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = bcrypt.hash(this.password, 10);
+  this.password = await  bcrypt.hash(this.password, 10);
   next();
 });
 
+
+//compare users entered password and previously stored password before login 
+//this method will return a boolean value
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
@@ -80,7 +93,7 @@ userSchema.methods.generateAccessToekn=function(){
 }
 
 userSchema.methods.generateRefreshToekn=function(){
-    return jwt.sign(){
+    return jwt.sign(){ 
         _id:this._id,
         email:this.email,
         username:this.username,
