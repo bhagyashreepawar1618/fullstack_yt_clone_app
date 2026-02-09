@@ -93,7 +93,7 @@ userSchema.methods.generateAccessToekn=function(){
 }
 
 userSchema.methods.generateRefreshToekn=function(){
-    return jwt.sign(){ 
+    return jwt.sign(){             
         _id:this._id,
         email:this.email,
         username:this.username,
