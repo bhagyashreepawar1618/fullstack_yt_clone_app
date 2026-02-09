@@ -53,56 +53,61 @@ const userSchema = new Schema(
     },
 
     refreshToken: {
-        type: String,
-      },
+      type: String,
     },
+  },
   { timestamps: true }
 );
 
 /*In all this methods we want data from data base thats why all this methods are written inside this user.model file so
 that we cant access the data using this context*/
 
-
 /*before saving password in datatbase we have to hash it
-we applied a hook pre befoew save and hash the password stored it in 
+we applied a hook pre before save and hash the password stored it in 
 password then save it in database */
 userSchema.pre("save", async function (next) {
+  //if password is not modified then dont hash it again and again
   if (!this.isModified("password")) return next();
-  this.password = await  bcrypt.hash(this.password, 10);
+
+  //if password is modified
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-
-//compare users entered password and previously stored password before login 
+//compare users entered password and previously stored password before login
 //this method will return a boolean value
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToekn=function(){
-    return jwt.sign(){
-        _id:this._id,
-        email:this.email,
-        username:this.username,
-        fullname:this.fullname
+userSchema.methods.generateAccessToekn = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      username: this.username,
+      fullname: this.fullname,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-        expiresIn:process.env.ACCESS_TOKEN_EXPIRY
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
-}
+  );
+};
 
-userSchema.methods.generateRefreshToekn=function(){
-    return jwt.sign(){             
-        _id:this._id,
-        email:this.email,
-        username:this.username,
-        fullname:this.fullname
+userSchema.methods.generateRefreshToekn = function () {
+  return jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      username: this.username,
+      fullname: this.fullname,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-        expiresIn:process.env.REFRESH_TOKEN_EXPIRY
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
-}
+  );
+};
 
 export const User = mongoose.model("User", userSchema);
