@@ -17,7 +17,7 @@ app.use(
   })
 );
 
-//congig for express to understand browser encoder
+//config for express to understand browser encoder
 app.use(
   express.urlencoded({
     extended: true,
@@ -29,5 +29,14 @@ app.use(cookieParser());
 
 //to store images and files in public
 app.use(express.static("public"));
+
+//routes section
+//routes import
+import userRouter from "../src/routes/user.routes.js";
+
+//routes declaration
+app.use("/api/v1/users", userRouter); //users is preffix
+
+//http://localhost:5000/api/v1/users/register
 
 export default app;
