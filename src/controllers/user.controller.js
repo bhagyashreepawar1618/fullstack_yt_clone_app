@@ -4,6 +4,28 @@ import { User } from "../models/user.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
+const generateAccessAndRefreshToekns = async (userId) => {
+  try {
+    const user = await User.findOne(userId);
+    //we've got all the properties in user (user is an object)
+    console.log(user, "this is a response from mongodb");
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateAccessToken();
+
+    user.refreshToken = refreshToken;
+    user.accessToken = accessToken;
+
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Something went wrong While generating Refresh and Acess Token"
+    );
+  }
+};
+
 const registerUser = asyncHandler(async (req, res) => {
   //get details from user (frontend)
   //validation if email is correct -not empty fields
@@ -16,7 +38,11 @@ const registerUser = asyncHandler(async (req, res) => {
   //return response
 
   const { fullname, email, username, password } = req.body;
+  console.log(req.body);
   console.log("email", email);
+  console.log("fullname", fullname);
+  console.log("email", username);
+  console.log("email", password);
 
   //validation
   if (fullname === "" || username === "" || password === "" || email === "") {
@@ -24,7 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //if user is already registered
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -34,31 +60,36 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //console.log req.files
-  const avtarLocalPath = req.files?.avtar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  // const avtarLocalPath = req.files?.avtar?.[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
-  if (!avtarLocalPath) {
-    throw new ApiError(400, "Avtar file is required");
-  }
+  // if (!avtarLocalPath) {
+  //   throw new ApiError(400, "Avtar file is required");
+  // }
 
-  const avtar = await uploadOnCloudinary(avtarLocalPath);
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  // //after getting the local path uload them on cloudinary
+  // //use await because it is an time taking process
+  // const avtar = await uploadOnCloudinary(avtarLocalPath);
+  // const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
-  if (!avtar) {
-    throw new ApiError(400, "Avtar file is required");
-  }
+  // if (!avtar) {
+  //   throw new ApiError(400, "Avtar file is required");
+  // }
 
+  //use .create method to store all in database
+  //for this particular user all feilds are stores in user database
+
+  const avtar = "";
   const user = await User.create({
     fullname,
-    avtar: avtar.url,
+    avtar: avtar,
     //we haven't verifeid if user has upload the avtar or not
     //therefore check or condition
-    coverImage: coverImage?.url || "",
+    coverImage: "",
     email,
     password,
     username: username.toLowerCase(),
   });
-
   //user is entry User is Schema
   //checks if user is created in database using _id
   //if it exists then remove password and -refreshToken
@@ -76,4 +107,57 @@ const registerUser = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(200, createdUser, "User registered successfully..."));
 });
-export default registerUser;
+
+//login user
+const loginUser = asyncHandler(async (req, res) => {
+  //take username and password from req.body
+  //check if username password is present or not
+  //find the user in database
+  //if user find
+  //check password
+  //access and refresh token
+  //send cookie
+  const { email, username, password } = req.body;
+
+  //one is required
+  if (!username || !email) {
+    throw new ApiError(400, "username or password is required");
+  }
+
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  //if not found
+  if (!user) {
+    throw new ApiError(400, "User is not registered..!!");
+  }
+
+  const isPassValid = await user.isPasswordCorrect(password);
+
+  //if password is not true
+  if (!isPassValid) {
+    throw new ApiError(401, "Invalid user Credentials");
+  }
+
+  //if password is correct generate refresh and accesstokens
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToekns(
+    user._id
+  );
+
+  //send cookie
+
+  const loggedInUser = await User.findOne(user._id).select(
+    "-password -refreshToken -accessToken"
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  //response
+
+  return res.status(200).cookie("accessToken", accessToken, options).cookie;
+});
+export { registerUser, loginUser };

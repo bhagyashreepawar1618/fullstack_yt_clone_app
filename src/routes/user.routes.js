@@ -7,6 +7,8 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 //middleware code here
 router.route("/register").post(
+  //middleware of multer
+  //used array because we have uploaded 2 filelds
   upload.fields([
     {
       name: "avtar",

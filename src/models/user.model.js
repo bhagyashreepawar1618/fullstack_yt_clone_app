@@ -31,10 +31,7 @@ const userSchema = new Schema(
 
     avtar: {
       type: String, //cloudinary url
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
+      default: "",
     },
     coverImage: {
       type: String,
@@ -60,18 +57,17 @@ const userSchema = new Schema(
 );
 
 /*In all this methods we want data from data base thats why all this methods are written inside this user.model file so
-that we cant access the data using this context*/
+that we can access the data using this context*/
 
 /*before saving password in datatbase we have to hash it
 we applied a hook pre before save and hash the password stored it in 
 password then save it in database */
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   //if password is not modified then dont hash it again and again
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) return;
 
   //if password is modified
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 //compare users entered password and previously stored password before login

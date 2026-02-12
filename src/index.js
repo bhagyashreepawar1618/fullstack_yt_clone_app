@@ -1,6 +1,6 @@
 import connectDB from "./db/index.js";
 import app from "./app.js";
-
+import mongoose from "mongoose";
 //connect DB is an async function so it will return a promise
 connectDB()
   .then(() => {
@@ -16,3 +16,7 @@ connectDB()
   .catch((err) => {
     console.log("MongoDB connection failed!! ");
   });
+
+mongoose.connection.on("connected", () => {
+  console.log("Connected to DB:", mongoose.connection.name);
+});
