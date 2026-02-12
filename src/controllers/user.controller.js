@@ -38,11 +38,6 @@ const registerUser = asyncHandler(async (req, res) => {
   //return response
 
   const { fullname, email, username, password } = req.body;
-  console.log(req.body);
-  console.log("email", email);
-  console.log("fullname", fullname);
-  console.log("email", username);
-  console.log("email", password);
 
   //validation
   if (fullname === "" || username === "" || password === "" || email === "") {
