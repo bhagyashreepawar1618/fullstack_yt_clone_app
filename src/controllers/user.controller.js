@@ -10,7 +10,7 @@ const generateAccessAndRefreshToekns = async (userId) => {
     //we've got all the properties in user (user is an object)
     console.log(user, "this is a response from mongodb");
     const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
     user.accessToken = accessToken;
@@ -39,6 +39,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const { fullname, email, username, password } = req.body;
 
+  console.log(req.body);
+  console.log(req.files);
+
   //validation
   if (fullname === "" || username === "" || password === "" || email === "") {
     throw new ApiError(400, "All feilds are compulsory");
@@ -54,33 +57,36 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with email or username Already Exists...");
   }
 
-  //console.log req.files
-  // const avtarLocalPath = req.files?.avtar?.[0]?.path;
-  // const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+  //console.log (req.files)
+  const avtarLocalPath = req.files?.avtar?.[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
-  // if (!avtarLocalPath) {
-  //   throw new ApiError(400, "Avtar file is required");
-  // }
+  if (!avtarLocalPath) {
+    throw new ApiError(400, "Avtar file is required");
+  }
 
-  // //after getting the local path uload them on cloudinary
-  // //use await because it is an time taking process
-  // const avtar = await uploadOnCloudinary(avtarLocalPath);
-  // const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  //after getting the local path uload them on cloudinary
+  //use await because it is an time taking process
+  const avtar = await uploadOnCloudinary(avtarLocalPath);
 
-  // if (!avtar) {
-  //   throw new ApiError(400, "Avtar file is required");
-  // }
+  let coverImage = "";
+  if (coverImageLocalPath) {
+    coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  }
+
+  if (!avtar) {
+    throw new ApiError(400, "Avtar file is required");
+  }
 
   //use .create method to store all in database
   //for this particular user all feilds are stores in user database
 
-  const avtar = "";
   const user = await User.create({
     fullname,
-    avtar: avtar,
-    //we haven't verifeid if user has upload the avtar or not
+    avtar: avtar?.url,
+    //we haven't verifeid if user has upload the coverImage or not
     //therefore check or condition
-    coverImage: "",
+    coverImage: coverImage?.url || "",
     email,
     password,
     username: username.toLowerCase(),
@@ -142,7 +148,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   //send cookie
 
-  const loggedInUser = await User.findOne(user._id).select(
+  const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken -accessToken"
   );
 
@@ -153,6 +159,10 @@ const loginUser = asyncHandler(async (req, res) => {
 
   //response
 
-  return res.status(200).cookie("accessToken", accessToken, options).cookie;
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
 });
 export { registerUser, loginUser };

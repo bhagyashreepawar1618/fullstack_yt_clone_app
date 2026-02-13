@@ -1,9 +1,7 @@
-import "./App.css";
-
 function App() {
   return (
     <>
-      <h1>Initial Setup</h1>
+      <h1>hello from frontend</h1>
     </>
   );
 }
