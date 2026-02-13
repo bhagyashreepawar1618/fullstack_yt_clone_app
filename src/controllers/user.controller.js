@@ -15,13 +15,14 @@ const generateAccessAndRefreshToekns = async (userId) => {
     user.refreshToken = refreshToken;
     user.accessToken = accessToken;
 
+    //directly save in database without validation
     await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(
       500,
-      "Something went wrong While generating Refresh and Acess Token"
+      "Something went wrong While generating Refresh and Access Token"
     );
   }
 };
@@ -120,7 +121,7 @@ const loginUser = asyncHandler(async (req, res) => {
   //send cookie
   const { email, username, password } = req.body;
 
-  //one is required
+  //atleast one is required
   if (!username || !email) {
     throw new ApiError(400, "username or password is required");
   }
@@ -147,11 +148,13 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 
   //send cookie
-
+  //remove password and refresh token then send the response
   const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken -accessToken"
+    "-password -refreshToken "
   );
 
+  //cookie is not modifiable by browser
+  //it can be only modified in server
   const options = {
     httpOnly: true,
     secure: true,
@@ -163,6 +166,22 @@ const loginUser = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged in successfully"
+      )
+    );
 });
-export { registerUser, loginUser };
+
+//logout
+const logoutUser = asyncHandler((req, res) => {
+  //cookies clear
+  //and generate refreshToken again
+});
+export { registerUser, loginUser, logoutUser };
