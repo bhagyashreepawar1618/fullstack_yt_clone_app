@@ -180,8 +180,25 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 //logout
-const logoutUser = asyncHandler((req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
   //cookies clear
   //and generate refreshToken again
+  //we've access of req.user (which contain information)
+
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  const options = {
+    httpOnly: true,
+  };
 });
 export { registerUser, loginUser, logoutUser };
