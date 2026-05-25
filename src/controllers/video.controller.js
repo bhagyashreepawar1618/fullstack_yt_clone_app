@@ -10,7 +10,6 @@ const getVideos = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .populate("owner", "fullname username avtar");
 
-  console.log("videos =", videos);
   return res
     .status(200)
     .json(new ApiResponse(200, videos, "videos fetched successfully"));
@@ -21,9 +20,7 @@ const getVideos = asyncHandler(async (req, res) => {
 const uploadVideos = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
   //take video from user
-  console.log("files=", req.files);
   const videoLocalPath = req.files?.videoFile?.[0].path; //multer
-
   const thumbnailLocalpath = req.files?.thumbnail?.[0].path;
 
   //if path is not defined throw an error
@@ -59,7 +56,6 @@ const uploadVideos = asyncHandler(async (req, res) => {
   });
 
   const uploadedVideo = await Video.findById(uservideo._id);
-  console.log("video info=", uploadedVideo);
 
   //if created user doesnot exists
   if (!uploadedVideo) {
@@ -80,8 +76,6 @@ const getUserVideos = asyncHandler(async (req, res) => {
   const videos = await Video.find({ owner: req.user._id }).sort({
     createdAt: -1,
   });
-
-  console.log("User videos=", videos);
 
   return res
     .status(200)
@@ -110,8 +104,6 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const deletedVideo = await Video.findOneAndDelete({
     _id: videoId,
   });
-
-  console.log("deleted video=", deletedVideo);
 
   if (!deletedVideo) {
     throw new ApiError(404, "Video not found or not authorized");
