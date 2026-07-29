@@ -59,7 +59,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with email or username Already Exists...");
   }
 
-  //console.log (req.files)
   const avtarLocalPath = req.files?.avtar?.[0]?.path;
   const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
